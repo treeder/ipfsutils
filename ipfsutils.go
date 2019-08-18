@@ -150,7 +150,7 @@ func GetBytesFromIPFS(ctx context.Context, cid string) ([]byte, error) {
 }
 
 func GetJSONFromIPFS(ctx context.Context, cid string, t interface{}) error {
-	b, err := gotils.GetBytesFromIPFS(ctx, cid)
+	b, err := GetBytesFromIPFS(ctx, cid)
 	if err != nil {
 		return err
 	}
