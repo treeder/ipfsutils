@@ -12,8 +12,7 @@ import (
 	"os"
 
 	ipfsapi "github.com/ipfs/go-ipfs-api"
-	"github.com/treeder/gotils"
-	"go.uber.org/zap"
+	"github.com/treeder/gotils/v2"
 )
 
 var (
@@ -49,8 +48,7 @@ func UploadFileToIPFS(ctx context.Context, filePath string) (string, error) {
 func UploadObjectToIPFS(ctx context.Context, data interface{}) (string, error) {
 	jsonValue, err := json.Marshal(data)
 	if err != nil {
-		gotils.L(ctx).Error("couldn't marshal JSON in writeJSON! This error is not handled", zap.Error(err))
-		return "", err
+		return "", gotils.C(ctx).Errorf(": %v", err)
 	}
 
 	return UploadBytesToIPFS(ctx, jsonValue)
@@ -100,13 +98,11 @@ func postToInfura(ctx context.Context, writer *multipart.Writer, body io.Reader)
 		// fmt.Println(resp.StatusCode)
 		// fmt.Println(resp.Header)
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			gotils.L(ctx).Error("Got error back from infura", zap.Error(err))
-			return "", fmt.Errorf("Got status code %v back from IPFS server", resp.StatusCode)
+			return "", fmt.Errorf("got status code %v back from IPFS server", resp.StatusCode)
 		}
 		bodyContent, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
-			gotils.L(ctx).Error("error unmarshaling message from infura", zap.Error(err))
-			return "", err
+			return "", gotils.C(ctx).Errorf("error unmarshaling message from infura: %v", err)
 		}
 		defer resp.Body.Close()
 		// 		fmt.Println(string(bodyContent))
@@ -114,8 +110,7 @@ func postToInfura(ctx context.Context, writer *multipart.Writer, body io.Reader)
 	ipfsResp := &InfuraIPFSResponse{}
 	err = json.Unmarshal(bodyContent, ipfsResp)
 	if err != nil {
-		gotils.L(ctx).Error("error unmarshaling message from infura", zap.Error(err))
-		return "", err
+		return "", gotils.C(ctx).Errorf("error unmarshaling message from infura: %v", err)
 	}
 	cid := ipfsResp.Hash
 	// fire off a couple gets to ipfs.io and cloudflare so they cache it quicker
